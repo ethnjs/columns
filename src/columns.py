@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 
+
 # Raised when the board is created with an invalid number of rows
 class InvalidBoardRows(Exception):
     pass
@@ -22,10 +23,13 @@ class InvalidFaller(Exception):
     pass
 
 
+
 @dataclass
 class Cell:
     state: int   # 0 empty, 1 falling, 2 landed, 3 frozen, 4 matched
     jewel: str | None
+
+
 
 class Faller():
     def __init__(self, col: int, jewels: list[str]) -> None:
@@ -101,8 +105,6 @@ class Faller():
         self._col += 1
         self._state = 1
 
-        
-
     def _validate_faller(self, jewels: list[str]) -> list[str]:
         '''Ensures the faller has exactly three one-character jewels; raise InvalidFaller otherwise'''
         if len(jewels) != 3:
@@ -121,8 +123,6 @@ class Faller():
         
 
 
-
-
 class GameState():
     def __init__(self, rows: int, columns: int) -> None:
         # true number of rows and columns
@@ -132,10 +132,16 @@ class GameState():
         # the game board is stored as a column-major 2D list of Cells
         self._board = self._create_empty_game_board()
 
+        self._faller = None
+
         self._matches = set()
+        self._matches_count = 0
         self._has_match = False
 
-        self._faller = None
+        self._turn_num = 1
+        self._total_points = 0
+        # adds to total points and resets after every new faller
+        self._current_points = 0
 
         self._game_over = False
 
@@ -214,6 +220,12 @@ class GameState():
         self._faller = faller
         self._update_faller_state()
         self._update_board()
+
+        self._total_points += self._current_points
+        print(f'Current Points: {self._current_points}')
+        print(f'Total Points: {self._total_points}')
+        self._current_points = 0
+        self._turn_num = 1
     
     def tick(self) -> None:
         '''Advances the game one step: move faller, resolve matches, or freeze as needed'''
@@ -221,6 +233,11 @@ class GameState():
 
         if self._has_match:
             self._clear_matches()
+            self._has_match = False
+
+            # calculate current points
+            self._current_points += 2**self._turn_num * 100 * self._matches_count
+            self._turn_num += 1
 
             if faller != None:
                 offboard = self._check_offboard_frozen_jewels()
@@ -369,6 +386,12 @@ class GameState():
     def has_match(self) -> bool:
         return self._has_match
     
+    def current_points(self) -> int:
+        return self._current_points
+    
+    def total_points(self) -> int:
+        return self._total_points
+    
     def game_over(self) -> bool:
         return self._game_over
     
@@ -390,19 +413,17 @@ class GameState():
 
     def _find_and_mark_matches(self) -> None:
         '''Finds all matches and marks them; update has_match accordingly'''
-        matches = self._find_matches()
-        
-        if matches != set():
-            self._matches = matches
-            self._has_match = True
-            self._mark_matches(matches)
-        else:
-            self._matches = set()
-            self._has_match = False
+        self._find_matches()
+        matches = self._matches
 
-    def _find_matches(self) -> set[tuple[int, int]]:
+        self._has_match = True if matches else False
+
+        self._mark_matches()
+
+    def _find_matches(self) -> None:
         '''Returns a set of coordinates of all jewels forming runs of 3+ in any direction'''
         matches = set()
+        count = 0
 
         rows = self._rows
         columns = self._columns
@@ -440,21 +461,22 @@ class GameState():
 
                     if len(run) >= 3:
                         matches.update(run)
+                        count += 1
         
-        return matches
+        self._matches = matches
+        self._matches_count = count
     
-    def _mark_matches(self, matches: set[tuple[int, int]]) -> None:
+    def _mark_matches(self) -> None:
         '''Mark the given coordinates as matched (state = 4)'''
+        matches = self._matches
         for c, r in matches:
             self._board[c][r].state = 4
 
     def _clear_matches(self) -> None:
         '''Removes all matched cells with the matched state'''
-        for c, r in self._matches:
+        matches = self._matches
+        for c, r in matches:
             self._board[c][r] = Cell(0, None)
-        
-        self._matches = set()
-        self._has_match = False
 
     def _update_board(self) -> None:
         '''Redraw the faller's current cells on the board and clear its previous positions'''

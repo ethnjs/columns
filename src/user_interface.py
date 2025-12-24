@@ -3,6 +3,8 @@ import columns
 import shell
 import random
 
+
+
 class ResetTickCount(Exception):
     pass
 
@@ -17,6 +19,8 @@ _LANDED_COLOR = pygame.Color(255, 255, 255)
 _NORMAL_TICK_INTERVAL = 15
 _FAST_TICK_INTERVAL = 2
 
+_FONT_PATH = 'assets/fonts/Micro5-Regular.ttf'
+_FONT_COLOR = pygame.Color(255, 255, 255)
 
 class ColumnsGame:
     def __init__(self):
@@ -94,6 +98,8 @@ class ColumnsGame:
         surface.fill(_BACKGROUND_COLOR)
 
         self._draw_next_faller_view()
+        self._draw_current_score()
+        self._draw_total_score()
         self._draw_board()
 
         pygame.display.flip()
@@ -163,7 +169,73 @@ class ColumnsGame:
             jewel_color = self._str_to_color(next_faller.get_jewel(n).jewel)
             pygame.draw.ellipse(surface, jewel_color, cell_rect)
 
+    def _draw_current_score(self) -> None:
+        game = self._state
+        surface = pygame.display.get_surface()
+        
+        cell_size = self._cell_size
+        board_width, board_height = self._board_width, self._board_height
 
+        left = (0.5 - board_width / 2) - (3 * cell_size)
+        top = (0.5 - board_height / 2) + (7/2 * cell_size)
+        
+        winw, winh = surface.get_size()
+
+        rect = pygame.Rect(winw * left, winh * top, winw * (5/2 * cell_size), winh * cell_size)
+        pygame.draw.rect(surface, _BOARD_COLOR, rect)
+
+        current_score = game.current_points()
+
+        if current_score > 0:
+            font = pygame.font.Font(_FONT_PATH, int(winh * (cell_size * 1.5)))
+            text = font.render(str(current_score), True, _FONT_COLOR)
+
+            text_rect = text.get_rect()
+            text_rect.right = rect.right
+            text_rect.centery = rect.centery
+
+            surface.blit(text, text_rect)
+
+    def _draw_total_score(self) -> None:
+        game = self._state
+        surface = pygame.display.get_surface()
+        
+        cell_size = self._cell_size
+        board_width, board_height = self._board_width, self._board_height
+
+        left = (0.5 - board_width / 2) - (5/2 * cell_size)
+        top = (0.5 - board_height / 2) + (11/2 * cell_size)
+        
+        winw, winh = surface.get_size()
+
+        def _draw_total_score_label() -> None:
+            top = (0.5 - board_height / 2) + (5 * cell_size)
+
+            rect = pygame.Rect(winw * left, winh * top, winw * (2 * cell_size), winh * (1/2 * cell_size))
+
+            font = pygame.font.Font(_FONT_PATH, int(winh * (1/2 * cell_size)))
+            text = font.render('SCORE', True, _FONT_COLOR)
+
+            text_rect = text.get_rect()
+            text_rect.right = rect.right - (0.005 * winw)
+            text_rect.centery = rect.centery
+
+            surface.blit(text, text_rect)
+
+        _draw_total_score_label()
+
+        rect = pygame.Rect(winw * left, winh * top, winw * (2 * cell_size), winh * (1/2 * cell_size))
+        pygame.draw.rect(surface, _BOARD_COLOR, rect)
+
+        total_score = game.total_points()
+        font = pygame.font.Font(_FONT_PATH, int(winh * (5/8 * cell_size)))
+        text = font.render(str(total_score), True, _FONT_COLOR)
+
+        text_rect = text.get_rect()
+        text_rect.right = rect.right - (0.005 * winw)
+        text_rect.centery = rect.centery
+
+        surface.blit(text, text_rect)
 
     def _str_to_color(self, color: str) -> pygame.Color:
         '''Converts a jewel character code to its corresponding pygame Color'''
