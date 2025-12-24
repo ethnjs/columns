@@ -1,6 +1,6 @@
 # How to Play the Game
 ## Setting Up the Environment
-Make sure you have downloaded ([Python 3.13.9](https://www.python.org/downloads/)) onto your computer. You can also use `winget` to download Python.
+Make sure you have downloaded [Python 3.13.9](https://www.python.org/downloads/) onto your computer. You can also use `winget` to download Python.
 ```
 winget search Python.Python.3.13.9
 winget install --id Python.Python.3.13.9
