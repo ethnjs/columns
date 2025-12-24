@@ -14,6 +14,9 @@ _BOARD_COLOR = pygame.Color(0, 0 , 0)
 _CELL_BORDER_COLOR = pygame.Color(40, 40, 40)
 _LANDED_COLOR = pygame.Color(255, 255, 255)
 
+_NORMAL_TICK_INTERVAL = 15
+_FAST_TICK_INTERVAL = 2
+
 
 class ColumnsGame:
     def __init__(self):
@@ -25,6 +28,7 @@ class ColumnsGame:
 
         self._running = True
         self._state = columns.GameState(self._rows, self._cols)
+        self._tick_interval = 15
 
         self._next_faller = self._create_random_faller()
 
@@ -42,6 +46,7 @@ class ColumnsGame:
 
             tick_count = 0
             show_matches = True
+            
             while self._running:
                 clock.tick(_FRAME_RATE)
                 tick_count += 1
@@ -55,8 +60,11 @@ class ColumnsGame:
                     self._draw_board(show_matches=show_matches)
                     pygame.display.flip()
                     show_matches = not show_matches
+                    tick_interval = _NORMAL_TICK_INTERVAL
+                else:
+                    tick_interval = self._tick_interval
 
-                if tick_count == 15:
+                if tick_count >= tick_interval:
                     tick_count = 0
                     
                     # if there is an active faller or if there is a match
@@ -109,7 +117,7 @@ class ColumnsGame:
         pygame.draw.rect(surface, _BOARD_COLOR, board_rect)
 
         board = self._state.board()
-        shell.display_board(self._state)
+        # shell.display_board(self._state)
         for r in range(rows):
             for c in range(cols):
                 x = left + c * cell_size
@@ -179,32 +187,30 @@ class ColumnsGame:
                 self._display_screen()
             elif event.type == pygame.KEYDOWN:
                 game = self._state
+
+                def safe_call(func) -> None:
+                    try:
+                        func()
+                        if game.faller() is not None and game.faller().state() == 2:
+                            raise ResetTickCount()
+                    except columns.IllegalAction as e:
+                        print(e)
+                    finally:
+                        self._display_screen()
+
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    try:
-                        game.move_faller_left()
-                    except columns.IllegalAction as e:
-                        print(e)
+                    safe_call(game.move_faller_left)
                 elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    try:
-                        game.move_faller_right()
-                    except columns.IllegalAction as e:
-                        print(e)
+                    safe_call(game.move_faller_right)
+                elif event.key == pygame.K_UP or event.key == pygame.K_w:
+                    safe_call(game.rotate_faller)
                 elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    game = self._state
                     if game.faller() is not None and game.faller().state() == 1 and game.has_match() is False:
-                        while True:
-                            game.tick()
-                            self._display_screen()
-                            if game.faller().state() == 2:
-                                break
-                        game.tick()
-                        raise ResetTickCount()
-                elif event.key == pygame.K_SPACE:
-                    try:
-                        game.rotate_faller()
-                    except columns.IllegalAction as e:
-                        print(e)
-                self._display_screen()
+                        self._tick_interval = _FAST_TICK_INTERVAL
+            
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                    self._tick_interval = _NORMAL_TICK_INTERVAL
 
     def _create_random_faller(self) -> columns.Faller:
         '''Creates and spawns a new faller with random jewels in a valid column'''
