@@ -22,14 +22,14 @@ Activate the virtual environment.
 cd venv/Scripts
 activate
 ```
-Install `pygame v.2.6.1`.
+Install required dependencies.
 ```
-pip install pygame==2.6.1
+pip install -r requirements.txt
 ```
 ## Playing the Game
 Either:
-1. Open the source code in VS Code and press play on the `user_interface.py` file.
+1. Open the source code in VS Code and press play on the `main.py` file.
 2. Run the following command in `./venv/Scripts`.
 ```
-python ../../src/user_interface.py
+python ../../src/main.py
 ```
