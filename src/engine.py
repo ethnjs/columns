@@ -222,8 +222,8 @@ class GameState():
         self._update_board()
 
         self._total_points += self._current_points
-        print(f'Current Points: {self._current_points}')
-        print(f'Total Points: {self._total_points}')
+        # print(f'Current Points: {self._current_points}')
+        # print(f'Total Points: {self._total_points}')
         self._current_points = 0
         self._turn_num = 1
     

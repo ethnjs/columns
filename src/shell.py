@@ -1,4 +1,4 @@
-import columns
+import engine
 
 def get_rows_cols() -> tuple[int, int]:
     rows = int(input())
@@ -21,7 +21,7 @@ def get_action() -> str:
     action = input().strip()
     return action
 
-def display_board(game: columns.GameState) -> None:
+def display_board(game: engine.GameState) -> None:
     rows = game.rows()
     columns = game.columns()
     board = game.board()
@@ -34,7 +34,7 @@ def display_board(game: columns.GameState) -> None:
 
     print(f" {'---' * columns} ")
 
-def _translate_cell(cell: columns.Cell) -> str:
+def _translate_cell(cell: engine.Cell) -> str:
     '''Converts a Cell into its display-string form based on its state.'''
     state = cell.state
     jewel = cell.jewel
@@ -53,7 +53,7 @@ def _translate_cell(cell: columns.Cell) -> str:
 
 def run_game() -> None:
     rows, cols = get_rows_cols()
-    game = columns.GameState(rows, cols)
+    game = engine.GameState(rows, cols)
 
     data = get_initial_board(rows, cols)
     if data != []:
@@ -70,7 +70,7 @@ def run_game() -> None:
             elif action.startswith('F'):
                 col = int(action.split()[1])
                 jewels = action.split()[2:]
-                faller = columns.Faller(col, jewels)
+                faller = engine.Faller(col, jewels)
                 game.spawn_faller(faller)
             elif action == 'R':
                 game.rotate_faller()
@@ -81,7 +81,7 @@ def run_game() -> None:
             elif action == 'Q':
                 game.end()
                 break
-        except columns.IllegalAction:
+        except engine.IllegalAction:
             pass
 
         display_board(game)
