@@ -1,10 +1,11 @@
 import pygame
 import random
-import time
 
 from constants import *
+import helpers
 import engine
 import shell
+import data_manager
 
 
 
@@ -89,6 +90,7 @@ class GameScreen:
         self._draw_time()
         self._draw_level()
         self._draw_username()
+        self._draw_leaderboard()
         self._draw_board()
 
     def _str_to_color(self, color: str) -> pygame.Color:
@@ -195,18 +197,21 @@ class GameScreen:
 
             surface.blit(text, text_rect)
 
-    def _draw_text(self, left: float, top: float, text: str, align_right: bool = False, draw_bounding_rect: bool = False) -> None:
+    def _draw_text(self, left: float, top: float, text: str, width: float = None, align_right: bool = False, draw_bounding_rect: bool = False) -> None:
         surface = self._surface
         winw, winh = surface.get_size()
         
         cell_size = self._cell_size
 
-        font = pygame.font.Font(MICRO_FONT, int(winh * (5/8 * cell_size)))
-        font_text = font.render(text, True, FONT_COLOR)
+        if width is None:
+            width = 2 * cell_size
         
-        bounding_rect = pygame.Rect(winw * left, winh * top, winw * (2 * cell_size), winh * (1/2 * cell_size))
+        bounding_rect = pygame.Rect(winw * left, winh * top, winw * width, winh * (1/2 * cell_size))
         if draw_bounding_rect:
             pygame.draw.rect(surface, BOARD_COLOR, bounding_rect)
+
+        font = pygame.font.Font(MICRO_FONT, int(winh * (5/8 * cell_size)))
+        font_text = font.render(text, True, FONT_COLOR)
 
         text_rect = font_text.get_rect()
 
@@ -247,7 +252,7 @@ class GameScreen:
         left = (0.5 - board_width / 2) - (5/2 * cell_size)
         top = (0.5 - board_height / 2) + (7 * cell_size)
 
-        self._draw_text(left, top, _frames_to_str(self._frame_count), align_right=True, draw_bounding_rect=True)
+        self._draw_text(left, top, helpers._frames_to_str(self._frame_count), align_right=True, draw_bounding_rect=True)
     
     def _draw_level(self) -> None:
         cell_size = self._cell_size
@@ -278,6 +283,36 @@ class GameScreen:
             label_text_str = 'PRACTICE ROUND'
 
         self._draw_text(left, label_top, label_text_str)
+
+    def _draw_leaderboard(self) -> None:
+        cell_size = self._cell_size
+        board_width, board_height = self._board_width, self._board_height
+
+        left = (0.5 + board_width / 2) + (1/2 * cell_size)
+        label_top = (0.5 - board_height / 2) + (3/2 * cell_size)
+
+        self._draw_text(left, label_top, 'LEADERBOARD')
+
+        scores = data_manager.get_leaderboard()
+
+        row_height = 0.05
+        rank_w = 0.5 * cell_size
+        name_w = 2 * cell_size
+        score_w = 1 * cell_size
+
+        for i, entry in enumerate(scores):
+            y = label_top + (1/2 * cell_size) + (i * row_height)
+
+            rank_text = f'{entry['placement']}.'
+            self._draw_text(left, y, rank_text, width=rank_w)
+
+            self._draw_text(left + rank_w, y, entry['username'], width=name_w)
+
+            score_text = str(entry['score'])
+            self._draw_text(left + rank_w + name_w, y, score_text, align_right=True, width=score_w)
+
+
+
         
     def handle_events(self, events: list[pygame.event.Event]) -> None:
         for event in events:
@@ -344,7 +379,3 @@ class GameScreen:
 
     def final_score_time_level(self) -> tuple[int, int, int]:
         return self._state.total_points(), self._frame_count, self._level
-
-def _frames_to_str(frames: int) -> str:
-    sec = frames // FRAME_RATE
-    return time.strftime('%M:%S', time.gmtime(sec)) + f'.{(frames % FRAME_RATE):02d}'

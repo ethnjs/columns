@@ -1,6 +1,7 @@
 import pygame
 
 from constants import *
+import data_manager
 
 class StartGame(Exception):
     def __init__(self, username: str):
@@ -48,7 +49,7 @@ class StartScreen():
         text = font.render(text_str, True, font_color)
 
         text_rect = text.get_rect()
-        text_rect.centerx = winw / 2
+        text_rect.centerx = 0.5 * winw
         text_rect.top = top * winh
 
         surface.blit(text, text_rect)
@@ -131,9 +132,11 @@ class StartScreen():
                     if not self._username_text:
                         self._yes_no = True
                         self._state = 2
-                    else:
+                    elif data_manager.user_exists(self._username_text):
                         self._yes_no = False
                         self._state = 3
+                    else:
+                        self._state = 4
 
     def _state2_3_events(self, events: list[pygame.event.Event]) -> None:
         for event in events:

@@ -1,4 +1,5 @@
 import pygame
+import time
 
 INITIAL_SIZE = (800, 800)
 FRAME_RATE = 30

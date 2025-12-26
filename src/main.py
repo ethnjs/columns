@@ -3,6 +3,7 @@ from constants import *
 from start_screen import StartScreen, StartGame
 from game_screen import GameScreen, GameOver
 from end_screen import EndScreen, EndGame, RestartGame
+import data_manager
 
 
 
@@ -47,7 +48,12 @@ class ColumnsGame():
                     self._active_screen.display()
                 except GameOver:
                     score, time, level = self._active_screen.final_score_time_level()
-                    self._active_screen = EndScreen(self._current_user, score, time, level)
+                    username = self._current_user
+                    
+                    if username:
+                        data_manager.save_new_entry(username, score, time, level)
+
+                    self._active_screen = EndScreen(username, score, time, level)
                 except EndGame:
                     break
                 except RestartGame:
