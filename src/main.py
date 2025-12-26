@@ -46,7 +46,8 @@ class ColumnsGame():
                     self._active_screen = GameScreen(self._current_user)
                     self._active_screen.display()
                 except GameOver:
-                    self._active_screen = EndScreen(self._current_user, self._active_screen.final_score(), self._active_screen.final_time())
+                    score, time, level = self._active_screen.final_score_time_level()
+                    self._active_screen = EndScreen(self._current_user, score, time, level)
                 except EndGame:
                     break
                 except RestartGame:
